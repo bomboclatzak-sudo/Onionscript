@@ -6374,7 +6374,6 @@ function Fatality:Loader(Config: Loader)
 
 	task.wait(0.5)
 
-	-- actual intro text
 	local TextLabel = Instance.new("TextLabel")
 	local UIGradient = Instance.new("UIGradient")
 	local UIScale = Instance.new("UIScale")
@@ -6385,21 +6384,14 @@ function Fatality:Loader(Config: Loader)
 	TextLabel.BackgroundTransparency = 1
 	TextLabel.Font = Enum.Font.GothamBold
 	TextLabel.TextSize = 50
-	TextLabel.RichText = true -- must be BEFORE setting Text
-	TextLabel.Text = Config.Name -- contains <font> tags
+	TextLabel.RichText = true 
+	TextLabel.Text = Config.Name 
 	TextLabel.TextColor3 = Color3.new(1, 1, 1)
 	TextLabel.TextTransparency = 1
 	TextLabel.ZIndex = 8
 
 	local textSize = Fatality:GetTextSize(TextLabel)
 	TextLabel.Size = UDim2.new(0, textSize.X + 100, 0, 50)
-
-	UIGradient.Color = ColorSequence.new{
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 116, 116)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(132, 58, 58))
-	}
-	UIGradient.Rotation = 88
-	UIGradient.Parent = TextLabel
 
 	UIScale.Parent = TextLabel
 	UIScale.Scale = Config.Scale * 4
