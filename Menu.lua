@@ -6349,11 +6349,11 @@ function Fatality:Loader(Config: Loader)
 	Config.Duration = Config.Duration or 3.5
 	Config.Scale = Config.Scale or 3
 
-	local Blur = Instance.new('BlurEffect')
+	local CoreGui = game:GetService("CoreGui")
+	local Lighting = game:GetService("Lighting")
+
+	local Blur = Instance.new("BlurEffect")
 	local Loader = Instance.new("ScreenGui")
-	local center = Instance.new("Frame")
-	local texts = Instance.new("Frame")
-	local UIListLayout = Instance.new("UIListLayout")
 	local BlackFrame = Instance.new("Frame")
 
 	Loader.Name = Fatality:RandomString()
@@ -6361,150 +6361,63 @@ function Fatality:Loader(Config: Loader)
 	Loader.IgnoreGuiInset = true
 	Loader.ZIndexBehavior = Enum.ZIndexBehavior.Global
 
-	center.Name = Fatality:RandomString()
-	center.Parent = Loader
-	center.AnchorPoint = Vector2.new(0.5, 0.5)
-	center.BackgroundTransparency = 1
-	center.Position = UDim2.new(0.5, 0, 0.5, 0)
-
-	texts.Name = Fatality:RandomString()
-	texts.Parent = Loader
-	texts.AnchorPoint = Vector2.new(0.5, 0.5)
-	texts.BackgroundTransparency = 1
-	texts.Position = UDim2.new(0.5, 0, 0.5, 0)
-	texts.Size = UDim2.new(1, 0, 0, 200)
-
-	UIListLayout.Parent = texts
-	UIListLayout.FillDirection = Enum.FillDirection.Horizontal
-	UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-	UIListLayout.Padding = UDim.new(0, Config.Scale * 5)
-
-	BlackFrame.Name = Fatality:RandomString()
 	BlackFrame.Parent = Loader
 	BlackFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	BlackFrame.BackgroundTransparency = 1
 	BlackFrame.Size = UDim2.new(1, 0, 1, 0)
 
 	Blur.Size = 0
-	Blur.Parent = game:GetService('Lighting')
+	Blur.Parent = Lighting
 
 	Fatality:CreateAnimation(Blur, 1, { Size = 60 })
 	Fatality:CreateAnimation(BlackFrame, 0.5, { BackgroundTransparency = 0.7 }).Completed:Wait()
+
 	task.wait(0.5)
 
-	local createText = function(TEXT)
-		local LIT = Instance.new("Frame")
-		local ASCII = Instance.new("TextLabel")
-		local UIGradient = Instance.new("UIGradient")
-		local UIScale = Instance.new("UIScale")
+	-- actual intro text
+	local TextLabel = Instance.new("TextLabel")
+	local UIGradient = Instance.new("UIGradient")
+	local UIScale = Instance.new("UIScale")
 
-		LIT.BackgroundTransparency = 1
-		LIT.Size = UDim2.new(0, 56, 0, 100)
+	TextLabel.Parent = Loader
+	TextLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+	TextLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+	TextLabel.BackgroundTransparency = 1
+	TextLabel.Font = Enum.Font.GothamBold
+	TextLabel.TextSize = 50
+	TextLabel.RichText = true -- must be BEFORE setting Text
+	TextLabel.Text = Config.Name -- contains <font> tags
+	TextLabel.TextColor3 = Color3.new(1, 1, 1)
+	TextLabel.TextTransparency = 1
+	TextLabel.ZIndex = 8
 
-		ASCII.Parent = LIT
-		ASCII.AnchorPoint = Vector2.new(0.5, 0.5)
-		ASCII.BackgroundTransparency = 1
-		ASCII.Position = UDim2.new(0.5, 0, 0.5, 0)
-		ASCII.ZIndex = 8
-		ASCII.Font = Enum.Font.GothamBold
-		ASCII.Text = TEXT
-		ASCII.RichText = true
-		ASCII.TextColor3 = Color3.fromRGB(255, 255, 255)
-		ASCII.TextSize = 50
-		ASCII.TextWrapped = true
+	local textSize = Fatality:GetTextSize(TextLabel)
+	TextLabel.Size = UDim2.new(0, textSize.X + 100, 0, 50)
 
-		local textsize = Fatality:GetTextSize(ASCII)
-		ASCII.Size = UDim2.new(0, textsize.X + 100, 0, 50)
-		LIT.Size = UDim2.new(0, textsize.X * 2.5, 0, 100)
+	UIGradient.Color = ColorSequence.new{
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 116, 116)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(132, 58, 58))
+	}
+	UIGradient.Rotation = 88
+	UIGradient.Parent = TextLabel
 
-		UIGradient.Color = ColorSequence.new{
-			ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 116, 116)),
-			ColorSequenceKeypoint.new(1, Color3.fromRGB(132, 58, 58))
-		}
-		UIGradient.Rotation = 88
-		UIGradient.Parent = ASCII
+	UIScale.Parent = TextLabel
+	UIScale.Scale = Config.Scale * 4
 
-		UIScale.Parent = ASCII
-		UIScale.Scale = Config.Scale
+	-- animations
+	Fatality:CreateAnimation(TextLabel, 0.45, { TextTransparency = 0 })
+	Fatality:CreateAnimation(UIScale, 0.5, { Scale = Config.Scale })
 
-		return LIT, ASCII
-	end
+	task.wait(Config.Duration)
 
-	local PosText = {}
+	Fatality:CreateAnimation(TextLabel, 1.5, { TextTransparency = 1 })
+	Fatality:CreateAnimation(Blur, 1.5, { Size = 0 })
+	Fatality:CreateAnimation(BlackFrame, 1.5, { BackgroundTransparency = 1 })
 
-	-- full richtext (no per-character splitting)
-	local L, A = createText(Config.Name)
-	L.Parent = texts
-	A.TextTransparency = 1
-
-	table.insert(PosText, { Frame = L, Text = A })
-
-	do
-		local StartText = Instance.new("TextLabel")
-		local UIGradient = Instance.new("UIGradient")
-		local UIScale = Instance.new("UIScale")
-
-		StartText.Parent = Loader
-		StartText.RichText = true
-		StartText.AnchorPoint = Vector2.new(0.5, 0.5)
-		StartText.BackgroundTransparency = 1
-		StartText.Position = UDim2.new(0.5, 0, 0.5, 0)
-		StartText.Size = UDim2.new(0, 28, 0, 50)
-		StartText.ZIndex = 8
-		StartText.Font = Enum.Font.GothamBold
-		StartText.Text = Config.Name
-		StartText.TextColor3 = Color3.fromRGB(255, 255, 255)
-		StartText.TextSize = 50
-		StartText.TextTransparency = 1
-
-		local textsize = Fatality:GetTextSize(StartText)
-		StartText.Size = UDim2.new(0, textsize.X + 100, 0, 50)
-
-		UIGradient.Color = ColorSequence.new{
-			ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 116, 116)),
-			ColorSequenceKeypoint.new(1, Color3.fromRGB(132, 58, 58))
-		}
-		UIGradient.Rotation = 88
-		UIGradient.Parent = StartText
-
-		UIScale.Parent = StartText
-		UIScale.Scale = Config.Scale * 4
-
-		Fatality:CreateAnimation(StartText, 0.45, { TextTransparency = 0 })
-		Fatality:CreateAnimation(UIScale, 0.5, { Scale = Config.Scale })
-		task.wait(0.45)
-
-		Fatality:CreateAnimation(StartText, 0.35, {
-			Position = UDim2.fromOffset(
-				PosText[1].Frame.AbsolutePosition.X + (PosText[1].Frame.AbsoluteSize.X / 2),
-				PosText[1].Frame.AbsolutePosition.Y + (PosText[1].Frame.AbsoluteSize.Y / 2) + math.abs(Loader.AbsolutePosition.Y)
-			)
-		})
-
-		task.wait(0.5)
-
-		for _, v in next, PosText do
-			Fatality:CreateAnimation(v.Text, 0.65, {
-				Position = UDim2.new(0.5, 0, 0.5, 0),
-				TextTransparency = 0
-			})
-		end
-
-		task.wait(Config.Duration + 0.65)
-
-		Fatality:CreateAnimation(StartText, 1.5, { TextTransparency = 1 })
-		for _, v in next, PosText do
-			Fatality:CreateAnimation(v.Text, 1.5, { TextTransparency = 1 })
-		end
-		Fatality:CreateAnimation(Blur, 1.5, { Size = 0 })
-		Fatality:CreateAnimation(BlackFrame, 1.5, { BackgroundTransparency = 1 })
-		task.wait(1.65)
-
-		Loader:Destroy()
-	end
+	task.wait(1.65)
+	Loader:Destroy()
 end
+
 
 
 function Fatality:CreateNotifier(): Notifier
